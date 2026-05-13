@@ -30,7 +30,7 @@
         'report/paper_format.xml',
         'views/supplies_rfp_views.xml',
         'views/ir_sequence.xml',
-        'views/purchase_order_views.xml',
+        # 'views/purchase_order_views.xml',
         'views/store_request_inherit_view.xml',
         'views/res_config_settings_views.xml',
         'views/rfp_split_wizard_views.xml',
