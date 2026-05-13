@@ -57,9 +57,9 @@
                     <field name="validity_period" invisible="purchase_origin != 'local'" />
                 </xpath>
 
-                <xpath expr="//field[@name='payment_term_id']" position='after'>
+                <!-- <xpath expr="//field[@name='payment_term_id']" position='after'>
                     <field name="payment_term" invisible="purchase_origin != 'foreign'" />
-                </xpath>
+                </xpath> -->
 
                 <xpath expr="//field[@name='currency_id']" position="after">
                     <field name="purchase_origin" />
