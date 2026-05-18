@@ -110,9 +110,9 @@
                     </tbody>
                 </table>
 
-                <div class="cgrn-quality">
+                <!-- <div class="cgrn-quality">
                     ጥራት / Quality: ........................................................ %
-                </div>
+                </div> -->
                 <div class="cgrn-reason-label">ገቢ የሆነበት ምክንያት / Reason</div>
                 <div class="cgrn-reason-line"><span t-field="o.reason_for_entry"/></div>
                 <div class="cgrn-reason-line">&#160;</div>
