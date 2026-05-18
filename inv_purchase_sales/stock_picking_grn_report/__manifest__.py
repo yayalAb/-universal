@@ -17,7 +17,7 @@
         'reports/get_pass_attachment_report.xml',
         'reports/good_receiving_attachment_report.xml',
         'reports/delivery_note_attachment_report.xml',
-        'views/stock_picking_views.xml',
+        # 'views/stock_picking_views.xml',
     ],
     'installable': True,
     'application': False,
