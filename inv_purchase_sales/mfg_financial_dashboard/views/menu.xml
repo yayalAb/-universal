@@ -8,13 +8,7 @@
     <menuitem
         id="menu_mfg_financial_dashboard_root"
         name="Executive Dashboard"
-        sequence="5"
+        sequence="-10"
+         action="action_mfg_financial_dashboard"
         groups="base.group_user"/>
-
-    <menuitem
-        id="menu_mfg_financial_dashboard"
-        name="Manufacturing &amp; Financial"
-        parent="menu_mfg_financial_dashboard_root"
-        action="action_mfg_financial_dashboard"
-        sequence="1"/>
 </odoo>
