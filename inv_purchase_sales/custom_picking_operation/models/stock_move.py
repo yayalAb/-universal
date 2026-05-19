@@ -16,6 +16,12 @@ class StockMove(models.Model):
         digits='Stock Weight',
         copy=False,
     )
+    customer_vetting_line_total_weight = fields.Float(
+        string='Total weight',
+    )
+    customer_vetting_line_p_net_weight = fields.Float(
+        string='Net weight',)
+
     customer_vetting_line_net_weight = fields.Float(
         string='Net Weight',
         compute='_compute_customer_vetting_line_weight_display',
