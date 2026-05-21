@@ -3,9 +3,18 @@
 import { Component, onMounted, onWillStart, useRef, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
+import { _t } from "@web/core/l10n/translation";
 import { DashboardCard } from "./dashboard_card/dashboard_card";
 import { ChartRenderer } from "./chart_renderer/chart_renderer";
 import { PaginationControls } from "./pagination_controls/pagination_controls";
+
+/** Format a Date as YYYY-MM-DD in local time (avoids UTC shift from toISOString). */
+function formatLocalDate(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+}
 
 const TABLE_SECTIONS = [
     "procurement",
@@ -18,6 +27,7 @@ const TABLE_SECTIONS = [
     "spare_parts",
     "delivery_sales",
     "customer_collections",
+    "partner_ledger",
     "profitability",
 ];
 
@@ -27,14 +37,15 @@ export class MfgFinancialDashboard extends Component {
     setup() {
         this.orm = useService("orm");
         this.action = useService("action");
+        this.notification = useService("notification");
 
         const today = new Date();
         const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
 
         this.state = useState({
             loading: true,
-            start_date: monthStart.toISOString().split("T")[0],
-            end_date: today.toISOString().split("T")[0],
+            start_date: formatLocalDate(monthStart),
+            end_date: formatLocalDate(today),
             company_name: "",
             subtitle: "",
             period_label: "",
@@ -51,6 +62,9 @@ export class MfgFinancialDashboard extends Component {
             spare_parts: [],
             delivery_sales: [],
             customer_collections: [],
+            partner_ledger: [],
+            partner_ledger_partners: [],
+            partner_filter_ids: [],
             profitability: [],
             charts: {
                 kpi_overview: { labels: [], datasets: [] },
@@ -62,6 +76,7 @@ export class MfgFinancialDashboard extends Component {
 
         this.dashboardRootRef = useRef("dashboardRoot");
         this.dashboardInnerRef = useRef("dashboardInner");
+        this.partnerFilterRef = useRef("partnerFilter");
 
         // Arrow handlers keep `this` when passed as props to DashboardCard.
         this.openPurchaseOrders = () => {
@@ -122,6 +137,9 @@ export class MfgFinancialDashboard extends Component {
         if (abs >= 1) {
             return `${sign}ETB ${abs.toFixed(1)}`;
         }
+        if (abs > 0) {
+            return `${sign}ETB ${abs.toFixed(2)}`;
+        }
         return "ETB 0.0";
     }
 
@@ -156,20 +174,89 @@ export class MfgFinancialDashboard extends Component {
         return this.state.kpi_trends?.[key] ?? 0;
     }
 
+    filteredPartnerLedgerLines() {
+        const lines = this.state.partner_ledger || [];
+        const ids = this.state.partner_filter_ids || [];
+        if (!ids.length) {
+            return lines;
+        }
+        const idSet = new Set(ids.map((id) => Number(id)));
+        return lines.filter((row) => idSet.has(Number(row.partner_id)));
+    }
+
+    filteredPartnerLedgerTotals() {
+        const ids = this.state.partner_filter_ids || [];
+        const totals = this.state.partner_ledger_partner_totals || [];
+        if (!ids.length) {
+            return totals;
+        }
+        const idSet = new Set(ids.map((id) => Number(id)));
+        return totals.filter((row) => idSet.has(Number(row.partner_id)));
+    }
+
+    filteredPartnerLedgerGrandTotal() {
+        const totals = this.filteredPartnerLedgerTotals();
+        const grand = totals.reduce(
+            (acc, row) => ({
+                partner: "Grand Total",
+                debit_raw: acc.debit_raw + (Number(row.debit_raw) || 0),
+                credit_raw: acc.credit_raw + (Number(row.credit_raw) || 0),
+                balance_raw: acc.balance_raw + (Number(row.balance_raw) || 0),
+            }),
+            { partner: "Grand Total", debit_raw: 0, credit_raw: 0, balance_raw: 0 }
+        );
+        return {
+            ...grand,
+            debit: grand.debit_raw,
+            credit: grand.credit_raw,
+            balance: grand.balance_raw,
+        };
+    }
+
+    tableRows(section) {
+        if (section === "partner_ledger") {
+            return this.filteredPartnerLedgerLines();
+        }
+        return this.state[section] || [];
+    }
+
     paginatedRows(section) {
-        const rows = this.state[section] || [];
+        const rows = this.tableRows(section);
         const page = this.state.pagination[section] || 1;
         const start = (page - 1) * MfgFinancialDashboard.PAGE_SIZE;
         return rows.slice(start, start + MfgFinancialDashboard.PAGE_SIZE);
     }
 
     totalPages(section) {
-        const total = (this.state[section] || []).length;
+        const total = this.tableRows(section).length;
         return Math.max(1, Math.ceil(total / MfgFinancialDashboard.PAGE_SIZE));
     }
 
     totalItems(section) {
-        return (this.state[section] || []).length;
+        return this.tableRows(section).length;
+    }
+
+    isPartnerSelected(partnerId) {
+        return (this.state.partner_filter_ids || []).includes(Number(partnerId));
+    }
+
+    async onPartnerFilterChange(ev) {
+        const selected = Array.from(ev.target.selectedOptions || []).map((opt) =>
+            Number(opt.value)
+        );
+        this.state.partner_filter_ids = selected;
+        this.state.pagination.partner_ledger = 1;
+    }
+
+    clearPartnerFilter() {
+        this.state.partner_filter_ids = [];
+        this.state.pagination.partner_ledger = 1;
+        const select = this.partnerFilterRef?.el;
+        if (select) {
+            Array.from(select.options).forEach((opt) => {
+                opt.selected = false;
+            });
+        }
     }
 
     currentPage(section) {
@@ -208,23 +295,32 @@ export class MfgFinancialDashboard extends Component {
                 use_live_data: true,
                 kpis: data.kpis || {},
                 kpi_trends: data.kpi_trends || {},
-                procurement: data.procurement,
-                production_efficiency: data.production_efficiency,
-                rm_pm_consumption: data.rm_pm_consumption,
-                byproduct_recovery: data.byproduct_recovery,
-                fg_inventory: data.fg_inventory,
-                raw_material_stock: data.raw_material_stock,
-                packaging_stock: data.packaging_stock,
-                spare_parts: data.spare_parts,
-                delivery_sales: data.delivery_sales,
-                customer_collections: data.customer_collections,
-                profitability: data.profitability,
-                charts: data.charts,
+                procurement: data.procurement || [],
+                production_efficiency: data.production_efficiency || [],
+                rm_pm_consumption: data.rm_pm_consumption || [],
+                byproduct_recovery: data.byproduct_recovery || [],
+                fg_inventory: data.fg_inventory || [],
+                raw_material_stock: data.raw_material_stock || [],
+                packaging_stock: data.packaging_stock || [],
+                spare_parts: data.spare_parts || [],
+                delivery_sales: data.delivery_sales || [],
+                customer_collections: data.customer_collections || [],
+                partner_ledger: data.partner_ledger || [],
+                partner_ledger_partners: data.partner_ledger_partners || [],
+                partner_ledger_partner_totals: data.partner_ledger_partner_totals || [],
+                partner_ledger_grand_total: data.partner_ledger_grand_total || null,
+                partner_filter_ids: [],
+                profitability: data.profitability || [],
+                charts: data.charts || this.state.charts,
             });
             this.resetPagination();
         } catch (e) {
             console.error("Dashboard load failed:", e);
             this.state.loading = false;
+            this.notification.add(
+                _t("Could not load dashboard data. Check server logs or your access rights."),
+                { type: "danger" }
+            );
         }
     }
 

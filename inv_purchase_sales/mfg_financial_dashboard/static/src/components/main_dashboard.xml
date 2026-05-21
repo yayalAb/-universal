@@ -7,7 +7,33 @@
                     <div class="col-12">
                         <div class="mfg-dashboard-filter-bar">
                             <div class="mfg-dashboard-filter-bar__inner">
-                                <h1 class="mfg-dashboard-header-title">Executive Dashboard</h1>
+                                <div class="mfg-dashboard-header-block">
+                                    <h1 class="mfg-dashboard-header-title">Executive Dashboard</h1>
+                                    <p class="mfg-dashboard-header-period" t-if="state.period_label">
+                                        <t t-esc="state.period_label"/>
+                                    </p>
+                                </div>
+                                <div class="mfg-dashboard-filter-group mfg-dashboard-filter-group--partners">
+                                    <label class="mfg-dashboard-filter-label">Partners</label>
+                                    <div class="mfg-dashboard-partner-filter">
+                                        <select class="mfg-dashboard-partner-select"
+                                                multiple="multiple"
+                                                size="4"
+                                                t-ref="partnerFilter"
+                                                t-on-change="onPartnerFilterChange">
+                                            <t t-foreach="state.partner_ledger_partners" t-as="p" t-key="p.id">
+                                                <option t-att-value="p.id"
+                                                        t-att-selected="isPartnerSelected(p.id)"
+                                                        t-esc="p.name"/>
+                                            </t>
+                                        </select>
+                                        <button type="button"
+                                                class="btn btn-sm btn-light mfg-dashboard-partner-clear"
+                                                t-on-click="clearPartnerFilter">
+                                            All partners
+                                        </button>
+                                    </div>
+                                </div>
                                 <div class="mfg-dashboard-filter-group mfg-dashboard-filter-group--dates">
                                     <div class="mfg-dashboard-filter-input">
                                         <i class="fa fa-calendar-o mfg-dashboard-filter-input__icon"/>
@@ -167,13 +193,14 @@
                                             <table class="table mfg-dashboard-table">
                                                 <thead>
                                                     <tr>
-                                                        <th>Product</th><th>Planned</th><th>Actual</th>
+                                                        <th>Material</th><th>MO No</th><th>Planned</th><th>Actual</th>
                                                         <th>Variance</th><th>Cost Impact</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    <tr t-foreach="paginatedRows('rm_pm_consumption')" t-as="row" t-key="row.product">
+                                                    <tr t-foreach="paginatedRows('rm_pm_consumption')" t-as="row" t-key="row_index">
                                                         <td t-esc="row.product"/>
+                                                        <td t-esc="row.mo_no"/>
                                                         <td t-esc="row.planned"/>
                                                         <td t-esc="row.actual"/>
                                                         <td t-esc="row.variance"/>
@@ -411,9 +438,81 @@
                                 </div>
                             </div>
 
-                            <!-- 9 Profitability -->
+                            <!-- 9 Partner Ledger -->
                             <div class="mfg-dashboard-section">
-                                <h3 class="mfg-dashboard-section__title">9. Profitability Dashboard</h3>
+                                <h3 class="mfg-dashboard-section__title">9. Partner Ledger Report</h3>
+                                <p class="mfg-dashboard-section__subtitle">Posted receivable &amp; payable entries by partner</p>
+                                <div class="mfg-dashboard-table-wrap">
+                                    <table class="table mfg-dashboard-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th><th>Partner</th><th>Account</th><th>Type</th>
+                                                <th>Journal Entry</th><th>Label</th>
+                                                <th>Debit</th><th>Credit</th><th>Balance</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr t-foreach="paginatedRows('partner_ledger')" t-as="row" t-key="row_index">
+                                                <td t-esc="row.date"/>
+                                                <td t-esc="row.partner"/>
+                                                <td t-esc="row.account"/>
+                                                <td t-esc="row.account_type"/>
+                                                <td t-esc="row.move"/>
+                                                <td t-esc="row.label"/>
+                                                <td class="text-end" t-esc="formatMoney(row.debit_raw !== undefined ? row.debit_raw : row.debit)"/>
+                                                <td class="text-end" t-esc="formatMoney(row.credit_raw !== undefined ? row.credit_raw : row.credit)"/>
+                                                <td class="text-end" t-esc="formatMoney(row.balance_raw !== undefined ? row.balance_raw : row.balance)"/>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <PaginationControls
+                                    page="currentPage('partner_ledger')"
+                                    totalPages="totalPages('partner_ledger')"
+                                    totalItems="totalItems('partner_ledger')"
+                                    pageSize="10"
+                                    onPageChange="(page) => this.onTablePageChange('partner_ledger', page)"/>
+
+                                <h4 class="mfg-dashboard-section__subtitle mt-3 mb-2">Partner totals</h4>
+                                <div class="mfg-dashboard-table-wrap">
+                                    <table class="table mfg-dashboard-table mfg-dashboard-table--summary">
+                                        <thead>
+                                            <tr>
+                                                <th>Partner</th>
+                                                <th class="text-end">Debit</th>
+                                                <th class="text-end">Credit</th>
+                                                <th class="text-end">Balance</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr t-foreach="filteredPartnerLedgerTotals()" t-as="pt" t-key="pt.partner_id">
+                                                <td t-esc="pt.partner"/>
+                                                <td class="text-end" t-esc="formatMoney(pt.debit_raw)"/>
+                                                <td class="text-end" t-esc="formatMoney(pt.credit_raw)"/>
+                                                <td class="text-end" t-esc="formatMoney(pt.balance_raw)"/>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr class="mfg-dashboard-table__grand-total">
+                                                <td><strong t-esc="filteredPartnerLedgerGrandTotal().partner"/></td>
+                                                <td class="text-end">
+                                                    <strong t-esc="formatMoney(filteredPartnerLedgerGrandTotal().debit_raw)"/>
+                                                </td>
+                                                <td class="text-end">
+                                                    <strong t-esc="formatMoney(filteredPartnerLedgerGrandTotal().credit_raw)"/>
+                                                </td>
+                                                <td class="text-end">
+                                                    <strong t-esc="formatMoney(filteredPartnerLedgerGrandTotal().balance_raw)"/>
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- 10 Profitability -->
+                            <div class="mfg-dashboard-section">
+                                <h3 class="mfg-dashboard-section__title">10. Profitability Dashboard</h3>
                                 <div class="mfg-dashboard-table-wrap">
                                     <table class="table mfg-dashboard-table">
                                         <thead>
