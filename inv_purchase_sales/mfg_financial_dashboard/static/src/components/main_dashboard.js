@@ -76,7 +76,6 @@ export class MfgFinancialDashboard extends Component {
 
         this.dashboardRootRef = useRef("dashboardRoot");
         this.dashboardInnerRef = useRef("dashboardInner");
-        this.partnerFilterRef = useRef("partnerFilter");
 
         // Arrow handlers keep `this` when passed as props to DashboardCard.
         this.openPurchaseOrders = () => {
@@ -184,7 +183,7 @@ export class MfgFinancialDashboard extends Component {
         return lines.filter((row) => idSet.has(Number(row.partner_id)));
     }
 
-    filteredPartnerLedgerTotals() {
+    filteredPartnerLedgerPartnerTotals() {
         const ids = this.state.partner_filter_ids || [];
         const totals = this.state.partner_ledger_partner_totals || [];
         if (!ids.length) {
@@ -195,7 +194,7 @@ export class MfgFinancialDashboard extends Component {
     }
 
     filteredPartnerLedgerGrandTotal() {
-        const totals = this.filteredPartnerLedgerTotals();
+        const totals = this.filteredPartnerLedgerPartnerTotals();
         const grand = totals.reduce(
             (acc, row) => ({
                 partner: "Grand Total",
@@ -205,17 +204,77 @@ export class MfgFinancialDashboard extends Component {
             }),
             { partner: "Grand Total", debit_raw: 0, credit_raw: 0, balance_raw: 0 }
         );
-        return {
-            ...grand,
-            debit: grand.debit_raw,
-            credit: grand.credit_raw,
-            balance: grand.balance_raw,
-        };
+        return grand;
+    }
+
+    partnerLedgerDisplayRows() {
+        const lines = this.filteredPartnerLedgerLines();
+        const byPartner = new Map();
+        for (const line of lines) {
+            const pid = Number(line.partner_id);
+            if (!byPartner.has(pid)) {
+                byPartner.set(pid, []);
+            }
+            byPartner.get(pid).push(line);
+        }
+        const totalsById = new Map(
+            this.filteredPartnerLedgerPartnerTotals().map((t) => [Number(t.partner_id), t])
+        );
+        const display = [];
+        for (const pt of this.filteredPartnerLedgerPartnerTotals()) {
+            const pid = Number(pt.partner_id);
+            const partnerLines = [...(byPartner.get(pid) || [])].sort((a, b) =>
+                (b.date || "").localeCompare(a.date || "")
+            );
+            if (!partnerLines.length) {
+                continue;
+            }
+            for (const line of partnerLines) {
+                display.push({ row_type: "line", ...line });
+            }
+            display.push({
+                row_type: "partner_total",
+                partner_id: pid,
+                partner: pt.partner,
+                debit_raw: pt.debit_raw,
+                credit_raw: pt.credit_raw,
+                balance_raw: pt.balance_raw,
+            });
+        }
+        for (const [pid, partnerLines] of byPartner) {
+            if (totalsById.has(pid)) {
+                continue;
+            }
+            for (const line of partnerLines) {
+                display.push({ row_type: "line", ...line });
+            }
+        }
+        const grand = this.filteredPartnerLedgerGrandTotal();
+        if (display.length) {
+            display.push({
+                row_type: "grand_total",
+                partner: grand.partner,
+                debit_raw: grand.debit_raw,
+                credit_raw: grand.credit_raw,
+                balance_raw: grand.balance_raw,
+            });
+        }
+        return display;
+    }
+
+    partnerLedgerRowKey(row, index) {
+        if (row.row_type === "partner_total") {
+            return `pt_${row.partner_id}`;
+        }
+        if (row.row_type === "grand_total") {
+            return "grand_total";
+        }
+        return `line_${row.partner_id}_${index}_${row.move || ""}_${row.date || ""}`;
     }
 
     tableRows(section) {
         if (section === "partner_ledger") {
-            return this.filteredPartnerLedgerLines();
+            return this.partnerLedgerDisplayRows();
         }
         return this.state[section] || [];
     }
@@ -236,27 +295,15 @@ export class MfgFinancialDashboard extends Component {
         return this.tableRows(section).length;
     }
 
-    isPartnerSelected(partnerId) {
-        return (this.state.partner_filter_ids || []).includes(Number(partnerId));
+    partnerFilterDropdownValue() {
+        const ids = this.state.partner_filter_ids || [];
+        return ids.length ? String(ids[0]) : "";
     }
 
-    async onPartnerFilterChange(ev) {
-        const selected = Array.from(ev.target.selectedOptions || []).map((opt) =>
-            Number(opt.value)
-        );
-        this.state.partner_filter_ids = selected;
+    onPartnerFilterSelect(ev) {
+        const val = ev.target.value;
+        this.state.partner_filter_ids = val ? [Number(val)] : [];
         this.state.pagination.partner_ledger = 1;
-    }
-
-    clearPartnerFilter() {
-        this.state.partner_filter_ids = [];
-        this.state.pagination.partner_ledger = 1;
-        const select = this.partnerFilterRef?.el;
-        if (select) {
-            Array.from(select.options).forEach((opt) => {
-                opt.selected = false;
-            });
-        }
     }
 
     currentPage(section) {
