@@ -28,8 +28,6 @@ export class MfgFinancialDashboard extends Component {
         this.orm = useService("orm");
         this.action = useService("action");
 
-        const currentYear = new Date().getFullYear();
-        this.fiscalYears = [currentYear, currentYear - 1, currentYear - 2];
         const today = new Date();
         const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
 
@@ -37,8 +35,6 @@ export class MfgFinancialDashboard extends Component {
             loading: true,
             start_date: monthStart.toISOString().split("T")[0],
             end_date: today.toISOString().split("T")[0],
-            fiscal_year: "",
-            year_over_year: false,
             company_name: "",
             subtitle: "",
             period_label: "",
@@ -66,6 +62,20 @@ export class MfgFinancialDashboard extends Component {
 
         this.dashboardRootRef = useRef("dashboardRoot");
         this.dashboardInnerRef = useRef("dashboardInner");
+
+        // Arrow handlers keep `this` when passed as props to DashboardCard.
+        this.openPurchaseOrders = () => {
+            this._openAction("purchase.order", "Purchase Orders");
+        };
+        this.openManufacturing = () => {
+            this._openAction("mrp.production", "Manufacturing Orders");
+        };
+        this.openSales = () => {
+            this._openAction("sale.order", "Sales Orders");
+        };
+        this.openStock = () => {
+            this._openAction("stock.quant", "Inventory");
+        };
 
         onMounted(() => {
             const root = this.dashboardRootRef.el;
@@ -142,20 +152,6 @@ export class MfgFinancialDashboard extends Component {
         await this.refreshData();
     }
 
-    async onYearOverYearChange(ev) {
-        this.state.year_over_year = ev.target.checked;
-        await this.refreshData();
-    }
-
-    async onFiscalYearChange(ev) {
-        this.state.fiscal_year = ev.target.value;
-        if (this.state.fiscal_year) {
-            this.state.start_date = "";
-            this.state.end_date = "";
-        }
-        await this.refreshData();
-    }
-
     kpiTrend(key) {
         return this.state.kpi_trends?.[key] ?? 0;
     }
@@ -197,11 +193,7 @@ export class MfgFinancialDashboard extends Component {
             const kwargs = {
                 date_start: this.state.start_date || false,
                 date_end: this.state.end_date || false,
-                year_over_year: this.state.year_over_year,
             };
-            if (this.state.fiscal_year) {
-                kwargs.fiscal_year = this.state.fiscal_year;
-            }
             const data = await this.orm.call(
                 "mfg.dashboard",
                 "get_dashboard_data",
@@ -234,22 +226,6 @@ export class MfgFinancialDashboard extends Component {
             console.error("Dashboard load failed:", e);
             this.state.loading = false;
         }
-    }
-
-    openPurchaseOrders() {
-        this._openAction("purchase.order", "Purchase Orders");
-    }
-
-    openManufacturing() {
-        this._openAction("mrp.production", "Manufacturing Orders");
-    }
-
-    openSales() {
-        this._openAction("sale.order", "Sales Orders");
-    }
-
-    openStock() {
-        this._openAction("stock.quant", "Inventory");
     }
 
     _openAction(model, name) {
