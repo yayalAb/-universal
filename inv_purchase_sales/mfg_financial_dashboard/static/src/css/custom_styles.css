@@ -24,11 +24,12 @@ html .o_web_client > .o_action_manager {
     -webkit-overflow-scrolling: touch;
     background-color: #f4f7fa;
     scrollbar-width: thin;
+    padding-bottom: 2.5rem;
 }
 
 .mfg-dashboard-page {
     background-color: #f4f7fa;
-    padding: 0 0 1rem;
+    padding: 0 0 2.5rem;
 }
 
 /* Single horizontal inset so full-width and split rows share the same edges */
@@ -37,6 +38,7 @@ html .o_web_client > .o_action_manager {
     --mfg-dash-gap: 0.7rem;
     padding-left: var(--mfg-dash-inset);
     padding-right: var(--mfg-dash-inset);
+    padding-bottom: 2.5rem;
 }
 
 /* —— Filter bar (pale blue-grey strip) —— */

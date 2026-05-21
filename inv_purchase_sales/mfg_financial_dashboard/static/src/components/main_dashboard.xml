@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
     <t t-name="mfg_financial_dashboard.MainDashboard" owl="1">
-        <div class="container-fluid mfg-dashboard-scroll-root mfg-dashboard-page pb-2" t-ref="dashboardRoot">
+        <div class="container-fluid mfg-dashboard-scroll-root mfg-dashboard-page" t-ref="dashboardRoot">
             <div class="mfg-dashboard-scroll-pane" t-ref="dashboardInner">
                 <div class="row m-0">
                     <div class="col-12">
