@@ -13,6 +13,7 @@
                 <field name="store_request_id" />
                 <field name="create_uid" string="Requested By" />
                 <field name="requested_date" />
+                <field name="submitted_date" string="Submitted Date" />
                 <field
                     name="state"
                     widget="badge"
@@ -169,7 +170,7 @@
                         string="Create Quotation"
                         type="object"
                         groups="VendorBid.group_rfp_create_quotation"
-                        invisible="state != 'approved' or purchase_type not in ('bid', 'proforma')"
+                        invisible="state not in ('approved','evaluation') or purchase_type not in ('bid', 'proforma')"
                     />
                     <button
                         name="action_close"
@@ -309,6 +310,8 @@
                                     <field name="remaining_qty" string="Remaining Quantity" />
                                     <field name="ordered_qty" string="Ordered Quantity" />
                                     <field name="product_uom" string="UoM" />
+                                    <field name="unit_price" string="Unit Price" optional="hide" />
+                                    <field name="subtotal_price" string="Subtotal" optional="hide"/>
                                 </list>
                             </field>
                         </page>
