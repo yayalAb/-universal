@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from odoo import api, fields, models
+from odoo import api, fields, models, _
+from odoo.exceptions import ValidationError
 
 
 class AccountPayment(models.Model):
@@ -12,10 +13,27 @@ class AccountPayment(models.Model):
     )
     check_transfer_no = fields.Char(
         string='Check/Transfer No',
+        required=True,
         copy=False,
         tracking=True,
         help='Cheque number, bank transfer reference, or other payment instrument number.',
     )
+
+    _sql_constraints = [
+        (
+            'check_transfer_no_unique',
+            'UNIQUE(check_transfer_no)',
+            'Check/Transfer number must be unique.',
+        ),
+    ]
+
+    @api.constrains('check_transfer_no')
+    def _check_check_transfer_no(self):
+        for payment in self:
+            if not (payment.check_transfer_no or '').strip():
+                raise ValidationError(
+                    _('Check/Transfer number is required.')
+                )
 
     @api.depends('payment_method_code', 'journal_id.type')
     def _compute_show_require_partner_bank(self):

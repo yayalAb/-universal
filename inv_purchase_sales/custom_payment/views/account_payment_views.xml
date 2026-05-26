@@ -27,6 +27,7 @@
             </xpath>
             <xpath expr="//group[@name='group2']/field[@name='partner_bank_id'][3]" position="after">
                 <field name="check_transfer_no"
+                       required="1"
                        readonly="state != 'draft'"/>
             </xpath>
             <field name="date" position="after">

@@ -11,6 +11,7 @@ class AccountPaymentRegister(models.TransientModel):
     )
     check_transfer_no = fields.Char(
         string='Check/Transfer No',
+        required=True,
         help='Cheque number, bank transfer reference, or other payment instrument number.',
     )
 
@@ -28,8 +29,7 @@ class AccountPaymentRegister(models.TransientModel):
     def _apply_custom_payment_vals(self, payment_vals):
         if self.maturity_date:
             payment_vals['maturity_date'] = self.maturity_date
-        if self.check_transfer_no:
-            payment_vals['check_transfer_no'] = self.check_transfer_no
+        payment_vals['check_transfer_no'] = self.check_transfer_no
         return payment_vals
 
     def _create_payment_vals_from_wizard(self, batch_result):

@@ -20,7 +20,7 @@
                        required="require_partner_bank_account and can_edit_wizard and (not can_group_payments or not group_payment)"
                        placeholder="Account Number"
                        context="{'display_account_trust': True, 'default_partner_id': partner_id}"/>
-                <field name="check_transfer_no"/>
+                <field name="check_transfer_no" required="1"/>
             </xpath>
             <field name="payment_date" position="after">
                 <field name="maturity_date"/>
