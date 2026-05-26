@@ -76,6 +76,14 @@ class StockPicking(models.Model):
             return self.sale_id.name
         return self.origin or ''
 
+    def get_gpa_customer(self):
+        self.ensure_one()
+        if self.partner_id:
+            return self.partner_id
+        if self.store_request_id and self.store_request_id.requested_by:
+            return self.store_request_id.requested_by.partner_id
+        return self.env['res.partner']
+
     def get_grn_amount_in_words(self):
         self.ensure_one()
         total = self.get_grn_grand_total()
