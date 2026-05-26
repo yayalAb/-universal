@@ -8,4 +8,11 @@
         <field name="report_name">stock_picking_custom.report_sales_proforma_attachment</field>
         <field name="report_file">stock_picking_custom.report_sales_proforma_attachment</field>
     </record>
+
+    <!-- Sales Attachment on PDF Quote action; label shown as Order -->
+    <record id="sale.action_report_saleorder" model="ir.actions.report">
+        <field name="name">Order</field>
+        <field name="report_name">stock_picking_custom.report_sales_order_attachment</field>
+        <field name="report_file">stock_picking_custom.report_sales_order_attachment</field>
+    </record>
 </odoo>

@@ -9,6 +9,7 @@
         'purchase_stock',
         'sale_stock',
         'sale',
+        'sale_pdf_quote_builder',
         'custom_report_layout',
     ],
     'data': [
@@ -16,6 +17,7 @@
         'data/sale_report_actions.xml',
         'reports/picking_operations_template.xml',
         'reports/sales_proforma_invoice_report.xml',
+        'reports/sales_order_attachment_report.xml',
         # 'reports/report_deliveryslip.xml',
         'views/stock_picking_view.xml',
         'views/maintenance_equipment_view.xml',

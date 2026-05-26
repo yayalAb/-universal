@@ -56,3 +56,28 @@ class SaleOrder(models.Model):
     def get_proforma_order_lines(self):
         self.ensure_one()
         return self.order_line.filtered(lambda line: not line.display_type)
+
+    def get_sales_attachment_fs_no(self):
+        self.ensure_one()
+        invoices = self.invoice_ids.filtered(
+            lambda move: move.move_type == 'out_invoice' and move.state == 'posted'
+        )
+        return invoices[0].name if invoices else ''
+
+    def get_sales_attachment_mrc_no(self):
+        self.ensure_one()
+        return self.client_order_ref or ''
+
+    def get_sales_attachment_payment_method(self):
+        self.ensure_one()
+        if not self.payment_term_id:
+            return ''
+        term = self.payment_term_id
+        name = (term.name or '').lower()
+        if 'cash' in name or 'immediate' in name:
+            return 'Cash'
+        if 'credit' in name:
+            return 'Credit'
+        if term.line_ids and all(line.nb_days == 0 for line in term.line_ids):
+            return 'Cash'
+        return 'Credit'
