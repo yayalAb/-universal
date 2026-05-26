@@ -65,6 +65,17 @@ class StockPicking(models.Model):
             return self.sale_id.name
         return self.origin or ''
 
+    def get_cdn_invoice_ref(self):
+        self.ensure_one()
+        if self.sale_id:
+            invoices = self.sale_id.invoice_ids.filtered(
+                lambda m: m.move_type == 'out_invoice' and m.state == 'posted'
+            )
+            if invoices:
+                return invoices[0].name
+            return self.sale_id.name
+        return self.origin or ''
+
     def get_grn_amount_in_words(self):
         self.ensure_one()
         total = self.get_grn_grand_total()

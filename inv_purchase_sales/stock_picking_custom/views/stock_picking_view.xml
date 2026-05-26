@@ -10,7 +10,8 @@
             </xpath>
             <xpath expr="//field[@name='origin']" position="after">
                 <field name="approved_by" readonly='1' />
-                <field name='carrier' invisible="picking_type_code != 'internal'"
+                <field name='carrier'
+                    invisible="picking_type_code not in ('internal', 'outgoing')"
                     options="{'no_create': True}" />
             </xpath>
             <xpath expr="//field[@name='move_ids_without_package']//field[@name='quantity']"
