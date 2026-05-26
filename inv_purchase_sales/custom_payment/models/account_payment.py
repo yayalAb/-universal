@@ -10,6 +10,18 @@ class AccountPayment(models.Model):
         tracking=True,
         help='Due date used on payment journal items when set.',
     )
+    check_transfer_no = fields.Char(
+        string='Check/Transfer No',
+        copy=False,
+        tracking=True,
+        help='Cheque number, bank transfer reference, or other payment instrument number.',
+    )
+
+    @api.depends('payment_method_code', 'journal_id.type')
+    def _compute_show_require_partner_bank(self):
+        super()._compute_show_require_partner_bank()
+        for payment in self:
+            payment.show_partner_bank_account = True
 
     @api.onchange('date')
     def _onchange_date_set_maturity_date(self):

@@ -9,7 +9,7 @@
     """,
     'author': 'Niyat ERP',
     'category': 'Accounting',
-    'version': '18.0.1.0.3',
+    'version': '18.0.1.0.8',
     'depends': ['account'],
     'data': [
         'security/ir.model.access.csv',
