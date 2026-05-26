@@ -8,6 +8,7 @@
         'store_request',
         'purchase_stock',
         'sale_stock',
+        'custom_report_layout',
     ],
     'data': [
         'data/stock_report_actions.xml',
