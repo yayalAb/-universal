@@ -99,6 +99,46 @@ class StockPicking(models.Model):
                 return move.grn_quality_pct
         return 0.0
 
+    def is_store_return_picking(self):
+        self.ensure_one()
+        picking_type = self.picking_type_id
+        return (
+            (picking_type.code == 'incoming' and picking_type.name == 'Delivery Return')
+            or (picking_type.code == 'outgoing' and picking_type.name == 'Receipt Return')
+        )
+
+    def get_sra_source_doc_ref(self):
+        self.ensure_one()
+        return self.origin or ''
+
+    def get_sra_returned_by(self):
+        self.ensure_one()
+        if self.store_request_id and self.store_request_id.requested_by:
+            return self.store_request_id.requested_by
+        if self.picking_type_id.code == 'incoming' and self.partner_id.user_id:
+            return self.partner_id.user_id
+        warehouse = self.location_id.warehouse_id
+        if warehouse and warehouse.storeman_id:
+            return warehouse.storeman_id
+        return self.create_uid
+
+    def get_sra_returned_by_name(self):
+        self.ensure_one()
+        user = self.get_sra_returned_by()
+        if user:
+            return user.name
+        return self.partner_id.display_name or ''
+
+    def get_sra_department_name(self):
+        self.ensure_one()
+        if self.store_request_id and self.store_request_id.department_id:
+            return self.store_request_id.department_id.name
+        return ''
+
+    def get_sra_justification(self):
+        self.ensure_one()
+        return self.reason_for_entry or self.note or ''
+
     def button_validate(self):
         res = super(StockPicking, self).button_validate()
         for rec in self:
