@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Remove separate print menu entry if module was upgraded from earlier version -->
+    <delete model="ir.actions.report" id="action_report_sales_proforma_attachment" />
+
+    <!-- Use custom Performa Attachment template on standard PRO-FORMA Invoice action -->
+    <record id="sale.action_report_pro_forma_invoice" model="ir.actions.report">
+        <field name="report_name">stock_picking_custom.report_sales_proforma_attachment</field>
+        <field name="report_file">stock_picking_custom.report_sales_proforma_attachment</field>
+    </record>
+</odoo>
