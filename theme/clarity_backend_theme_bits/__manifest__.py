@@ -29,6 +29,7 @@
         "web.assets_backend": [
             'clarity_backend_theme_bits/static/src/scss/variables_list.scss',
             'clarity_backend_theme_bits/static/src/xml/WebClient.xml',
+            'clarity_backend_theme_bits/static/src/xml/form_status_indicator.xml',
             'clarity_backend_theme_bits/static/src/xml/navbar/sidebar.xml',
             'clarity_backend_theme_bits/static/src/xml/systray_items/user_menu.xml',
             'clarity_backend_theme_bits/static/src/js/SidebarBottom.js',
