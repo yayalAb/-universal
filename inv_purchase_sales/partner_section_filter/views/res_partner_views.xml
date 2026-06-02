@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="res_partner_view_search_section" model="ir.ui.view">
+            <field name="name">res.partner.search.section.filter</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="account.res_partner_view_search"/>
+            <field name="arch" type="xml">
+                <filter name="customer" position="attributes">
+                    <attribute name="domain">[('customer_rank', '&gt;', 0), ('is_employee_contact', '=', False)]</attribute>
+                </filter>
+                <filter name="supplier" position="attributes">
+                    <attribute name="domain">[('supplier_rank', '&gt;', 0), ('is_employee_contact', '=', False)]</attribute>
+                </filter>
+            </field>
+        </record>
+
+        <record id="account.res_partner_action_customer" model="ir.actions.act_window">
+            <field name="domain">[('customer_rank', '&gt;', 0), ('is_employee_contact', '=', False)]</field>
+        </record>
+
+        <record id="account.res_partner_action_supplier" model="ir.actions.act_window">
+            <field name="domain">[('supplier_rank', '&gt;', 0), ('is_employee_contact', '=', False)]</field>
+        </record>
+
+        <record id="base.action_partner_customer_form" model="ir.actions.act_window">
+            <field name="domain">[('customer_rank', '&gt;', 0), ('is_employee_contact', '=', False)]</field>
+        </record>
+
+        <record id="base.action_partner_supplier_form" model="ir.actions.act_window">
+            <field name="domain">[('supplier_rank', '&gt;', 0), ('is_employee_contact', '=', False)]</field>
+        </record>
+
+    </data>
+</odoo>
