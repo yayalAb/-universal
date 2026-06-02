@@ -41,6 +41,7 @@
             ),
         ],
         'web.assets_backend': [
+            'muk_web_theme/static/src/webclient/form/form_status_indicator.xml',
             'muk_web_theme/static/src/webclient/**/*.xml',
             'muk_web_theme/static/src/webclient/**/*.scss',
             'muk_web_theme/static/src/webclient/**/*.js',
